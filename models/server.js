@@ -1,5 +1,6 @@
 const express = require('express')
-const cors = require('cors')
+const cors = require('cors');
+const { dbConnection } = require('../database/config');
 
 //hago un clase servidor 
 class Server {
@@ -12,16 +13,26 @@ class Server {
         //con esta linea se ve inmediatamente los path de susuarios
         this.usuarioPath = '/api/usuarios';
 
+
+        //llama a la funcion para establer coneccion con la BD
+        this.conectarDB();
+        
         //middlewares-> funciones que siempre se ejecutan cuando
         //se levanta el servidor
         this.middlewares();
-
-        
+                
         //Rutas de la aplicacion-> cuando ser llame el constructor tb se llama
         //a las rutas
         this.routes();
 
-    }
+    };
+
+//FUncion que es llamada cuyabdi se crea una instancia del servidor
+//para que se conecte a la base de datos
+    async conectarDB(){
+        await dbConnection();
+
+    };
 
     middlewares(){
         //Directorio publico
