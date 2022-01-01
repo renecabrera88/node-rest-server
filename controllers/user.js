@@ -1,6 +1,13 @@
 //desestructura y extrae response para darle las funciones 
 //de response a "res", ex.status,jason, etc.
 const { response } = require('express');
+//importa modelo de usuario, se usa Usuario con U mayusta
+//por que permite formar instancias del modelo user.
+//se considera una nomenclatura standar
+const Usuario = require('../models/user');
+//requiere paquete para encriptar
+const bcryptjs = require('bcryptjs');
+
 
 
 const userGet = ((req = request, res = response) => {
@@ -35,21 +42,43 @@ const userPut = ((req, res = response) => {
     });
 });
 
-const userPost = ((req, res = response) => {
-
+const userPost = async (req, res = response) => {
+  
+    
     //capturo contenido del body que parsie en server.js 
     //const body = req.body;  
-    const { nombre , edad, id } = req.body; 
+    //const { nombre , edad, id } = req.body; 
+    const { nombre, correo, password, rol, estado, img } = req.body;
+    //crea instancia del uisuario
+    const usuario = new Usuario({ nombre, correo, password, rol, estado, img });
+    //Guarda la instancia en la BD, osea guarda el registro
+    //en la BD mongoAtlas
+
+    
+    //*********validar si el correo ya existe
+    const existeEmail = await Usuario.findOne({ correo });
+    if ( existeEmail ){
+        return res.status(400).json({
+            msg:'Ese correo ya esta registrado'
+        });
+    }
+
+    //********encriptar contraseña
+    const salt = bcryptjs.genSaltSync();
+    usuario.password = bcryptjs.hashSync( password, salt );
+
+    //********guardar en base de datos */
+    
+    await usuario.save();
+
 
     res.json({
         ok: true,
         msg: 'post API - Controllers',
         //body
-        nombre, 
-        edad,
-        id
+        usuario
     });
-});
+};
 
 const userDelete = ((req, res = response) => {
     res.json({

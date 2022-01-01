@@ -5,6 +5,13 @@
 const { Router } = require('express');
 //extrae las funciones de user.js desde controllers
 const { userGet, userPut, userPost, userDelete } = require('../controllers/user');
+//requiero express validator para hacer validaciones de correo
+const { check } = require('express-validator');
+//exporta middleware validarCampos
+const { validarCampos } = require('../middlewares/validar-campos');
+//importar mi schema de roles
+const Role = require('../models/role');
+
 
 //llamamo a la funcion Router
 const router = Router();
@@ -22,7 +29,23 @@ router.get('/', userGet);
 //se hace extrae en params (rep.params.id) en user.js de controller
 router.put('/:id', userPut);
 
-router.post('/', userPost);
+router.post('/',[
+    //este array es un conjunto de middleware para validar
+    check('nombre','El nombre es obligatorio').not().isEmpty(),
+    check('correo','El formato de correo no es valido').isEmail(),
+    check('password','El correo debe tener 6 caracteres').isLength( {min: 6}),
+    //check('rol','No es rol valido').isIn(['ADMIN_ROLE','USER_ROLE']),
+    check('rol').custom(async(rol='')=>{
+        const existeRol = await Role.findOne({ rol });
+        if (!existeRol) {
+            throw new Error (`El rol ${rol} no esta registrado en la BD`)
+        }
+    }),
+    //Si para le middleware para validar campos, pasa a ejecutar
+    //el controlador "validarCampos".
+    validarCampos
+    
+] ,userPost);
 
 router.delete('/',userDelete);
 
